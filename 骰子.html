@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星巴克幸運骰</title>
+    <!-- 載入 Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 載入 Inter 字體 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons for aesthetic enhancement -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* 設定基本字體和白色背景 */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff; /* 純白色背景 */
+            color: #2c1f19; /* 深咖啡色文字 */
+            min-height: 100vh;
+        }
+
+        /* 主卡片樣式：奶油色背景，深色邊框 */
+        .main-card {
+            border: 1px solid #d4c4b5;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .main-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 骰子容器的 3D 視角 */
+        .dice-container {
+            width: 120px;
+            height: 120px;
+            perspective: 600px;
+            margin: 40px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        /* 骰子本身 */
+        .dice {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 滾動動畫更長更具彈性 */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+        /* 骰子面 */
+        .face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            padding: 15px;
+            border: 4px solid rgba(255, 255, 255, 0.7); /* 增加白色邊框質感 */
+            border-radius: 18px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4);
+        }
+
+        /* 點數樣式 - 點數背景色改為淺米色，與面顏色形成對比 */
+        .dot {
+            width: 18px;
+            height: 18px;
+            background-color: #f7f3f0; /* 淺米色點數 */
+            border-radius: 50%;
+            box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+            align-self: center;
+            justify-self: center;
+        }
+
+        /* 點數佈局與顏色 */
+        /* 1 - Front (普獎 - 綠) */
+        .face:nth-child(1) { grid-template-columns: 1fr; grid-template-rows: 1fr; background-color: #00704a; }
+        .face:nth-child(1) .dot:nth-child(1) { grid-area: 1 / 1; }
+        /* 6 - Back (超級幸運 - 紅/橘) */
+        .face:nth-child(2) { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); background-color: #e55c00; } 
+        .face:nth-child(2) .dot:nth-child(1) { grid-area: 1 / 1; }
+        .face:nth-child(2) .dot:nth-child(2) { grid-area: 1 / 3; }
+        .face:nth-child(2) .dot:nth-child(3) { grid-area: 3 / 1; }
+        .face:nth-child(2) .dot:nth-child(4) { grid-area: 3 / 3; }
+        .face:nth-child(2) .dot:nth-child(5) { grid-area: 2 / 1; } 
+        .face:nth-child(2) .dot:nth-child(6) { grid-area: 2 / 3; }
+        /* 3 - Top (普獎 - 綠) */
+        .face:nth-child(3) { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); background-color: #00704a; }
+        .face:nth-child(3) .dot:nth-child(1) { grid-area: 1 / 1; }
+        .face:nth-child(3) .dot:nth-child(2) { grid-area: 2 / 2; }
+        .face:nth-child(3) .dot:nth-child(3) { grid-area: 3 / 3; }
+        /* 4 - Bottom (中獎 - 咖啡棕) */
+        .face:nth-child(4) { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); background-color: #704214; }
+        .face:nth-child(4) .dot:nth-child(1) { grid-area: 1 / 1; }
+        .face:nth-child(4) .dot:nth-child(2) { grid-area: 1 / 2; }
+        .face:nth-child(4) .dot:nth-child(3) { grid-area: 2 / 1; }
+        .face:nth-child(4) .dot:nth-child(4) { grid-area: 2 / 2; }
+        /* 2 - Right (限定獎 - 金/黃) */
+        .face:nth-child(5) { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); background-color: #c99300; }
+        .face:nth-child(5) .dot:nth-child(1) { grid-area: 1 / 1; }
+        .face:nth-child(5) .dot:nth-child(2) { grid-area: 3 / 3; }
+        /* 5 - Left (普獎 - 綠) */
+        .face:nth-child(6) { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); background-color: #00704a; }
+        .face:nth-child(6) .dot:nth-child(1) { grid-area: 1 / 1; }
+        .face:nth-child(6) .dot:nth-child(2) { grid-area: 1 / 3; }
+        .face:nth-child(6) .dot:nth-child(3) { grid-area: 3 / 1; }
+        .face:nth-child(6) .dot:nth-child(4) { grid-area: 3 / 3; }
+        .face:nth-child(6) .dot:nth-child(5) { grid-area: 2 / 2; }
+
+
+        /* 骰子面的 3D 定位 */
+        /* Front (1) */
+        .face:nth-child(1) { transform: rotateY(0deg) translateZ(60px); }
+        /* Back (6) */
+        .face:nth-child(2) { transform: rotateY(180deg) translateZ(60px); }
+        /* Top (3) */
+        .face:nth-child(3) { transform: rotateX(90deg) translateZ(60px); }
+        /* Bottom (4) */
+        .face:nth-child(4) { transform: rotateX(-90deg) translateZ(60px); }
+        /* Right (2) */
+        .face:nth-child(5) { transform: rotateY(90deg) translateZ(60px); }
+        /* Left (5) */
+        .face:nth-child(6) { transform: rotateY(-90deg) translateZ(60px); }
+
+        /* 自定義按鈕樣式 */
+        .starbucks-btn {
+            background-color: #00704a; /* 星巴克綠 */
+            color: white;
+            padding: 14px 28px;
+            border-radius: 9999px;
+            font-weight: 700;
+            box-shadow: 0 6px 15px rgba(0, 112, 74, 0.4); /* 綠色陰影更柔和 */
+            transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        .starbucks-btn:hover {
+            background-color: #00563e;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 112, 74, 0.5);
+        }
+        .starbucks-btn:active {
+            transform: translateY(0px);
+            box-shadow: 0 4px 10px rgba(0, 112, 74, 0.3);
+        }
+
+        /* 滾動動畫類別 */
+        .rolling-animation {
+            animation: roll-animation 0.5s infinite linear;
+        }
+
+        @keyframes roll-animation {
+            0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+            100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+        }
+
+        /* 結果框顏色類別 (中獎背景色) */
+        .bg-prize-green { background-color: #e6f5e6; color: #00704a; border-color: #00704a; }
+        .bg-prize-brown { background-color: #fcf1e7; color: #704214; border-color: #704214; }
+        .bg-prize-gold { background-color: #fff9e6; color: #c99300; border-color: #c99300; }
+        .bg-prize-red { 
+            background-color: #ffeaea; 
+            color: #e55c00; 
+            border-color: #e55c00; 
+            animation: pulse-border 1.5s infinite;
+        }
+        
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(229, 92, 0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(229, 92, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(229, 92, 0, 0); }
+        }
+        
+        /* 結果框顯示動畫 */
+        .result-reveal {
+            animation: zoom-in-out 0.5s ease-out;
+        }
+        @keyframes zoom-in-out {
+            0% { transform: scale(0.9); opacity: 0; }
+            80% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+        /* 普通連結樣式 */
+        .url-link {
+            word-break: break-all;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: block;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #00704a;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+        .url-link:hover {
+            background-color: #e0e0e0;
+        }
+
+    </style>
+</head>
+<!-- 調整 body 類別：將 items-center 放在 main-card 內，這樣在小螢幕上可以讓卡片內容更好地適應高度 -->
+<body class="min-h-screen flex flex-col items-center justify-start p-4 sm:p-8">
+
+    <div class="max-w-md mx-auto w-full text-center bg-[#f7f3f0] main-card rounded-[24px] p-8 sm:p-10">
+        <!-- 標題區 -->
+        <header class="mb-6">
+            <i data-lucide="award" class="mx-auto w-10 h-10 text-[#00704a] mb-2"></i>
+            <h1 class="text-4xl font-extrabold text-[#2c1f19] mb-2 tracking-wide">星巴克幸運骰</h1>
+            <!-- 更新標語 -->
+            <p class="text-gray-600 text-lg font-medium border-t border-b border-gray-300 py-2">✨ 您的下一杯咖啡，由星運決定！</p>
+        </header>
+
+        <!-- 骰子模擬區 -->
+        <div class="dice-container">
+            <div id="dice" class="dice">
+                <!-- 1 點 (普獎) -->
+                <div class="face">
+                    <div class="dot"></div>
+                </div>
+                <!-- 6 點 (超級幸運) - 紅色 -->
+                <div class="face">
+                    <div class="dot"></div><div class="dot"></div>
+                    <div class="dot"></div><div class="dot"></div>
+                    <div class="dot"></div><div class="dot"></div>
+                </div>
+                <!-- 3 點 (普獎) -->
+                <div class="face">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+                <!-- 4 點 (中獎) -->
+                <div class="face">
+                    <div class="dot"></div><div class="dot"></div>
+                    <div class="dot"></div><div class="dot"></div>
+                </div>
+                <!-- 2 點 (限定獎) -->
+                <div class="face">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+                <!-- 5 點 (普獎) - 綠色 -->
+                <div class="face">
+                    <div class="dot"></div><div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div><div class="dot"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 擲骰按鈕 -->
+        <button id="rollButton" class="starbucks-btn w-full mt-4 text-xl">
+            點擊擲骰，獲得你的咖啡驚喜！
+        </button>
+
+        <!-- 結果顯示區 -->
+        <!-- 移除預設的 bg-white，讓顏色類別可以覆蓋 -->
+        <div id="resultBox" class="mt-6 p-5 sm:p-6 rounded-xl border-4 border-gray-300 min-h-[140px] flex flex-col justify-center transition-all duration-300 shadow-lg bg-white"> 
+            <i id="resultIcon" data-lucide="cup-soda" class="mx-auto w-8 h-8 text-gray-500 mb-2"></i>
+            <h2 id="resultTitle" class="text-xl font-bold text-[#704214] mb-2">擲骰結果將顯示於此</h2>
+            <p id="resultText" class="text-gray-700 text-base">購買指定飲品後，你將獲得一次機會。</p>
+            <p id="probabilityNote" class="text-xs text-gray-500 mt-2 hidden">（超級幸運為極低機率觸發）</p>
+        </div>
+
+        <!-- 備註/提示訊息 -->
+        <footer class="mt-6 text-sm text-gray-400">
+            <p class="text-gray-500">* 本頁面僅為活動模擬，不具實際兌換效力。</p>
+        </footer>
+    </div>
+    
+    <!-- URL 連結區塊 (替代 QR Code) 已被移除 -->
+
+    <script>
+        const rollButton = document.getElementById('rollButton');
+        const dice = document.getElementById('dice');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultText = document.getElementById('resultText');
+        const resultBox = document.getElementById('resultBox');
+        const probabilityNote = document.getElementById('probabilityNote');
+        const resultIcon = document.getElementById('resultIcon');
+
+        // 定義獎項及機率 (總權重 = 100)
+        const PRIZES = [
+            // 普獎：免費升級大杯或加料 (總權重 69%) - 映射到 1, 3, 5 點 (綠色)
+            { id: 1, name: "普獎", title: "免費升級或加料！", detail: "恭喜獲得：免費升級大杯或一份客製化配料！", weight: 69, rotation: [0, 0, 0], class: 'bg-prize-green', icon: 'coffee' },
+            { id: 3, name: "普獎", title: "免費升級或加料！", detail: "恭喜獲得：免費升級大杯或一份客製化配料！", weight: 0, rotation: [90, 0, 0], class: 'bg-prize-green', icon: 'coffee' }, 
+            { id: 5, name: "普獎", title: "免費升級或加料！", detail: "恭喜獲得：免費升級大杯或一份客製化配料！", weight: 0, rotation: [0, -90, 0], class: 'bg-prize-green', icon: 'coffee' }, 
+            
+            // 中獎：一張飲品兌換券 (權重 20%) - 映射到 4 點 (咖啡棕)
+            { id: 4, name: "中獎", title: "再來一杯！飲品兌換券！", detail: "恭喜獲得：一張飲品兌換券，下次免費享用！", weight: 20, rotation: [-90, 0, 0], class: 'bg-prize-brown', icon: 'ticket' },
+
+            // 限定獎：限定周邊 (權重 10%) - 映射到 2 點 (金色)
+            { id: 2, name: "限定獎", title: "獲得限定周邊！", detail: "恭喜獲得：星巴克幸運骰限定迷你馬克杯！", weight: 10, rotation: [0, 90, 0], class: 'bg-prize-gold', icon: 'gift' },
+
+            // 超級幸運：一年飲品兌換券 (權重 1%) - 映射到 6 點 (紅色)
+            { id: 6, name: "超級幸運", title: "⭐⭐⭐超級大獎！一年份飲品！⭐⭐⭐", detail: "恭喜！您獲得：一年份飲品兌換券！請洽店員登記！", weight: 1, rotation: [0, 180, 0], class: 'bg-prize-red', icon: 'star' }
+        ];
+
+        // 計算總權重
+        const totalWeight = PRIZES.reduce((sum, prize) => sum + prize.weight, 0);
+
+        // 根據權重隨機選擇獎項
+        function getRandomPrize() {
+            let random = Math.random() * totalWeight;
+            let currentWeight = 0;
+            
+            // 權重計算基於 ID: 1(普獎), 4(中獎), 2(限定), 6(超級幸運)
+            const weightedResults = [
+                PRIZES.find(p => p.id === 1), 
+                PRIZES.find(p => p.id === 4),
+                PRIZES.find(p => p.id === 2),
+                PRIZES.find(p => p.id === 6)
+            ];
+
+            let selectedPrizeId = 1; 
+            for (const item of weightedResults) {
+                currentWeight += item.weight;
+                if (random < currentWeight) {
+                    selectedPrizeId = item.id;
+                    break;
+                }
+            }
+
+            // 確保骰子動畫的視覺多樣性 (如果抽到普獎，隨機顯示 1, 3, 5 點其中一面)
+            if (selectedPrizeId === 1) {
+                const prizeFaces = [1, 3, 5]; // 普獎包含 1, 3, 5 點
+                const finalFaceId = prizeFaces[Math.floor(Math.random() * prizeFaces.length)];
+                
+                return PRIZES.find(p => p.id === finalFaceId) || PRIZES.find(p => p.id === 1);
+            }
+
+            // 返回其他獎項
+            return PRIZES.find(p => p.id === selectedPrizeId);
+        }
+
+        // 擲骰動畫與結果顯示
+        async function rollDice() {
+            if (rollButton.disabled) return;
+
+            // 1. 禁用按鈕並啟動動畫
+            rollButton.disabled = true;
+            rollButton.textContent = "幸運骰子滾動中...";
+            dice.classList.add('rolling-animation');
+            
+            // 重置結果框樣式 (移除所有獎項類別，恢復到中立樣式)
+            resultBox.classList.remove('bg-prize-green', 'bg-prize-brown', 'bg-prize-gold', 'bg-prize-red', 'result-reveal');
+            // 恢復中立樣式
+            resultBox.className = 'mt-6 p-5 sm:p-6 rounded-xl border-4 border-gray-300 min-h-[140px] flex flex-col justify-center transition-all duration-300 shadow-lg bg-white'; 
+
+            resultTitle.textContent = "緊張時刻...";
+            resultText.textContent = "等待命運的咖啡驚喜...";
+            probabilityNote.classList.add('hidden');
+            resultIcon.setAttribute('data-lucide', 'cup-soda'); // 重置圖標
+            resultIcon.style.opacity = 0.5;
+            resultIcon.className = 'mx-auto w-8 h-8 text-gray-500 mb-2'; // 重置圖標顏色
+            lucide.createIcons();
+
+            dice.style.transform = 'translateZ(-60px)'; 
+
+            // 2. 隨機選出結果
+            const finalPrize = getRandomPrize();
+
+            // 3. 隨機生成一個強烈的旋轉角度，讓動畫更逼真
+            const randomRotation = [
+                Math.floor(Math.random() * 5 + 4) * 360, 
+                Math.floor(Math.random() * 5 + 4) * 360,
+                Math.floor(Math.random() * 5 + 4) * 360
+            ];
+
+            // 4. 計算最終的旋轉角度，以顯示中獎的面
+            const finalRotation = [
+                finalPrize.rotation[0] + randomRotation[0],
+                finalPrize.rotation[1] + randomRotation[1],
+                finalPrize.rotation[2] + randomRotation[2]
+            ];
+
+            // 5. 執行 3D 變換
+            await new Promise(resolve => setTimeout(resolve, 50)); 
+            dice.style.transform = `translateZ(-60px) rotateX(${finalRotation[0]}deg) rotateY(${finalRotation[1]}deg) rotateZ(${finalRotation[2]}deg)`;
+
+            // 6. 等待動畫結束
+            await new Promise(resolve => setTimeout(resolve, 1800)); // 匹配 CSS 1.8s
+
+            // 7. 顯示結果
+            dice.classList.remove('rolling-animation');
+            rollButton.textContent = "再次擲骰 (僅供模擬)";
+            rollButton.disabled = false;
+
+            // 根據最終抽到的獎項 ID 找到對應的資訊 (使用權重 ID)
+            let displayPrize = PRIZES.find(p => p.id === finalPrize.id);
+            // 普獎統一使用 ID 1 的資訊
+            if ([1, 3, 5].includes(finalPrize.id)) {
+                 displayPrize = PRIZES.find(p => p.id === 1); 
+            }
+            
+            resultTitle.textContent = `${displayPrize.name} - ${displayPrize.title}`;
+            resultText.textContent = displayPrize.detail;
+            
+            // 設置結果框樣式
+            // 移除 bg-white 並添加獎項顏色類別
+            resultBox.classList.remove('bg-white', 'border-gray-300');
+            resultBox.classList.add(displayPrize.class);
+            resultBox.classList.add('result-reveal'); // 添加動畫效果
+            
+            // 設置圖標
+            resultIcon.setAttribute('data-lucide', displayPrize.icon);
+            resultIcon.style.opacity = 1;
+            
+            // 根據獎項 ID 設置圖標顏色
+            let iconColorClass = 'text-current';
+            if (displayPrize.id === 6) { iconColorClass = 'text-[#e55c00]'; } // 紅色
+            else if (displayPrize.id === 2) { iconColorClass = 'text-[#c99300]'; } // 金色
+            else if (displayPrize.id === 4) { iconColorClass = 'text-[#704214]'; } // 咖啡棕
+            else { iconColorClass = 'text-[#00704a]'; } // 綠色
+            
+            resultIcon.className = `mx-auto w-8 h-8 mb-2 ${iconColorClass}`;
+
+            // 重新渲染 Lucide 圖標
+            lucide.createIcons();
+            
+            // 超級幸運特別提示
+            if (displayPrize.id === 6) {
+                probabilityNote.classList.remove('hidden');
+            }
+        }
+
+        rollButton.addEventListener('click', rollDice);
+
+        // 初始化 Lucide 圖標
+        document.addEventListener('DOMContentLoaded', () => {
+             lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
