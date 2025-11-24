@@ -303,26 +303,26 @@ export default function App() {
 
   useEffect(() => {
     try {
-      const savedHistory = localStorage.getItem('starbucks_all_history_v1');
+      const savedHistory = localStorage.getItem('starbucks_all_history_v2');
       if (savedHistory) setAllHistory(JSON.parse(savedHistory));
       
-      const savedCollection = localStorage.getItem('starbucks_collection_final_v2');
+      const savedCollection = localStorage.getItem('starbucks_collection_final_v3');
       if (savedCollection) setUnlockedIds(JSON.parse(savedCollection));
       
-      const savedStars = localStorage.getItem('starbucks_stars_final_v2');
+      const savedStars = localStorage.getItem('starbucks_stars_final_v3');
       if (savedStars) { const s = parseInt(savedStars); setStars(s); setDisplayStars(s); }
       
-      const savedTheme = localStorage.getItem('starbucks_theme_pref_final_v2');
+      const savedTheme = localStorage.getItem('starbucks_theme_pref_final_v3');
       if (savedTheme && THEMES[savedTheme]) setCurrentThemeKey(savedTheme);
     } catch (e) {}
   }, []);
 
   useEffect(() => {
     try {
-      localStorage.setItem('starbucks_all_history_v1', JSON.stringify(allHistory));
-      localStorage.setItem('starbucks_collection_final_v2', JSON.stringify(unlockedIds));
-      localStorage.setItem('starbucks_stars_final_v2', stars.toString());
-      localStorage.setItem('starbucks_theme_pref_final_v2', currentThemeKey);
+      localStorage.setItem('starbucks_all_history_v2', JSON.stringify(allHistory));
+      localStorage.setItem('starbucks_collection_final_v3', JSON.stringify(unlockedIds));
+      localStorage.setItem('starbucks_stars_final_v3', stars.toString());
+      localStorage.setItem('starbucks_theme_pref_final_v3', currentThemeKey);
     } catch (e) {}
   }, [allHistory, unlockedIds, stars, currentThemeKey]);
 
@@ -359,7 +359,7 @@ export default function App() {
     play('click');
     triggerHaptic(50);
     
-    setHistory([]); // Clear main screen history for single result
+    setHistory([]); 
     setResult(null);
     setSelectedCoupon(null);
     setShowSuccess(false);
@@ -409,8 +409,8 @@ export default function App() {
             isUsed: false
         };
         
-        setHistory([newCoupon]); // Only latest for main screen
-        setAllHistory(prev => [newCoupon, ...prev]); // Add to bag
+        setHistory([newCoupon]); 
+        setAllHistory(prev => [newCoupon, ...prev]);
         
     }, 500);
   };
@@ -418,7 +418,6 @@ export default function App() {
   const markAsUsed = (uuid) => {
     play('success');
     triggerHaptic([100]);
-    // Update both transient history and full bag
     setHistory(prev => prev.map(item => item.uuid === uuid ? { ...item, isUsed: true } : item));
     setAllHistory(prev => prev.map(item => item.uuid === uuid ? { ...item, isUsed: true } : item));
     
@@ -430,7 +429,7 @@ export default function App() {
   const clearBag = () => {
       if (confirm("確定要清空背包嗎？")) {
           setAllHistory([]);
-          setHistory([]); // Also clear current display
+          setHistory([]); 
           triggerHaptic(20);
       }
   };
@@ -496,7 +495,7 @@ export default function App() {
         {/* 星星飛行特效 */}
         {flyingStars.map(id => <FlyingStar key={id} onComplete={() => {}} />)}
 
-        <header className="p-4 pt-10 shadow-md z-20 flex-shrink-0 transition-colors duration-500" style={{ backgroundColor: theme.colors.primary, color: theme.colors.icon }}> 
+        <header className="p-4 pt-8 shadow-md z-20 flex-shrink-0 transition-colors duration-500 flex flex-col gap-2" style={{ backgroundColor: theme.colors.primary, color: theme.colors.icon }}> 
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2 cursor-pointer select-none active:scale-95 transition-transform" onClick={handleLogoClick}>
               <Coffee className="w-6 h-6" />
@@ -520,20 +519,22 @@ export default function App() {
               </div>
           )}
           
-          {/* 星禮程 Widget (可點擊) */}
-          <div 
-            onClick={() => { play('click'); setShowMemberCard(true); }}
-            className="absolute right-4 bottom-[-16px] pl-1 pr-3 py-1 rounded-full shadow-md flex items-center space-x-1 text-xs font-bold border transition-all bg-white cursor-pointer hover:scale-105 active:scale-95 z-30"
-            style={{ color: currentThemeKey === 'gold' ? '#cba258' : '#b08d55', borderColor: currentThemeKey === 'gold' ? '#cba258' : '#b08d55' }}
-          >
-              <div className="w-6 h-6 rounded-full flex items-center justify-center bg-[#b08d55] text-white -ml-1 shadow-sm" style={{ backgroundColor: currentThemeKey === 'gold' ? '#cba258' : '#b08d55' }}>
-                  <Star className="w-3 h-3 fill-current" />
+          {/* 星禮程 Widget - 調整到 Header 內層，使用 Flex 排版確保可見 */}
+          <div className="flex justify-end">
+              <div 
+                onClick={() => { play('click'); setShowMemberCard(true); }}
+                className="pl-1 pr-3 py-1 rounded-full shadow-md flex items-center space-x-1 text-xs font-bold border transition-all bg-white cursor-pointer hover:scale-105 active:scale-95 z-30"
+                style={{ color: currentThemeKey === 'gold' ? '#cba258' : '#b08d55', borderColor: currentThemeKey === 'gold' ? '#cba258' : '#b08d55' }}
+              >
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center bg-[#b08d55] text-white -ml-1 shadow-sm" style={{ backgroundColor: currentThemeKey === 'gold' ? '#cba258' : '#b08d55' }}>
+                      <Star className="w-3 h-3 fill-current" />
+                  </div>
+                  <div className="flex flex-col items-start leading-none ml-1">
+                      <span className="text-[10px] opacity-70">星星數</span>
+                      <span className="text-sm">{displayStars}</span>
+                  </div>
+                  <ChevronRight className="w-3 h-3 opacity-50 ml-1" />
               </div>
-              <div className="flex flex-col items-start leading-none ml-1">
-                  <span className="text-[10px] opacity-70">星星數</span>
-                  <span className="text-sm">{displayStars}</span>
-              </div>
-              <ChevronRight className="w-3 h-3 opacity-50 ml-1" />
           </div>
         </header>
 
@@ -708,3 +709,4 @@ export default function App() {
     </div>
   );
 }
+          
